@@ -1,19 +1,8 @@
-<![CDATA[<div align="center">
-
 # 📚 Library Management System
 
-### A Modern, Full-Stack Library Management System
+> A Modern, Full-Stack Library Management System
 
 **Flask · React · SQLite/MySQL · JWT Authentication**
-
-![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-3.1-000000?style=for-the-badge&logo=flask&logoColor=white)
-![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
-
-</div>
 
 ---
 
@@ -21,15 +10,15 @@
 
 - [Overview](#-overview)
 - [System Architecture](#-system-architecture)
-- [Database Schema (ER Diagram)](#-database-schema-er-diagram)
-- [Role & Permission Matrix](#-role--permission-matrix)
+- [Database Schema](#-database-schema-er-diagram)
+- [Role and Permission Matrix](#-role--permission-matrix)
 - [Authentication Flow](#-authentication-flow)
 - [Borrowing Lifecycle](#-borrowing-lifecycle)
 - [Fine Calculation Logic](#-fine-calculation-logic)
 - [API Reference](#-api-reference)
 - [Project Structure](#-project-structure)
 - [Tech Stack](#-tech-stack)
-- [Setup & Installation](#-setup--installation)
+- [Setup and Installation](#-setup--installation)
 - [Default Credentials](#-default-credentials)
 - [Frontend Pages](#-frontend-pages)
 - [Business Rules](#-business-rules)
@@ -40,7 +29,7 @@
 
 A production-ready Library Management System designed to handle real-world library operations. The system supports **three user roles** (Admin, Librarian, Student), manages book inventory, tracks borrowing/return workflows, applies automatic late fines, sends in-app notifications, and maintains a full audit trail of every action.
 
-> ⚠️ **No public registration.** Users are created exclusively by the Admin.
+> **Note:** No public registration. Users are created exclusively by the Admin.
 
 ### Key Highlights
 
@@ -49,7 +38,7 @@ A production-ready Library Management System designed to handle real-world libra
 | 🔐 JWT Authentication | Secure, stateless token-based login with role claims |
 | 👥 Role-Based Access | Granular permissions per role (Admin / Librarian / User) |
 | 📖 Book Catalog | Grid display with cover images, search, and category filtering |
-| 🔄 Borrowing System | Full borrow → due → return lifecycle with stock tracking |
+| 🔄 Borrowing System | Full borrow - due - return lifecycle with stock tracking |
 | 💰 Automatic Fines | Tiered fine engine (10% base + daily escalation) |
 | 🔔 Notifications | Real-time in-app alerts for fines, limits, and overdue items |
 | 📝 Activity Logs | Complete audit trail of all CRUD and borrowing operations |
@@ -57,25 +46,49 @@ A production-ready Library Management System designed to handle real-world libra
 
 ---
 
+## 📸 Screenshots
+
+### Login Page
+
+![Login Page](screenshots/login.png)
+
+### Admin Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### Books Catalog (Card Grid)
+
+![Books](screenshots/books.png)
+
+### Book Details View
+
+![Book Details](screenshots/book_details.png)
+
+### Borrowing Management
+
+![Borrowings](screenshots/borrowings.png)
+
+---
+
 ## 🏗 System Architecture
 
 ```mermaid
 graph TB
-    subgraph Frontend["🖥️ Frontend (React + Vite)"]
+    subgraph Frontend["Frontend - React + Vite"]
         UI["React Components"]
         Router["React Router DOM"]
-        AuthCtx["AuthContext (JWT State)"]
+        AuthCtx["AuthContext - JWT State"]
         Axios["Axios Interceptor"]
     end
 
-    subgraph Backend["⚙️ Backend (Flask)"]
+    subgraph Backend["Backend - Flask"]
         API["Flask REST API"]
         JWTMw["JWT Middleware"]
-        RoleDec["@role_required Decorator"]
+        RoleDec["role_required Decorator"]
         Routes["Blueprint Routes"]
     end
 
-    subgraph Database["🗄️ Database (SQLite / MySQL)"]
+    subgraph Database["Database - SQLite or MySQL"]
         Users["users"]
         Books["books"]
         Categories["categories"]
@@ -94,10 +107,6 @@ graph TB
     Routes --> Borrowings
     Routes --> Notifications
     Routes --> ActivityLogs
-
-    style Frontend fill:#1e1b4b,color:#fff
-    style Backend fill:#064e3b,color:#fff
-    style Database fill:#7c2d12,color:#fff
 ```
 
 ---
@@ -111,7 +120,7 @@ erDiagram
         string name
         string username UK
         string password
-        string role "admin | librarian | user"
+        string role
         datetime created_at
     }
 
@@ -142,7 +151,7 @@ erDiagram
         date borrow_date
         date due_date
         date return_date
-        string status "borrowed | returned | overdue"
+        string status
         decimal fine_amount
     }
 
@@ -170,24 +179,32 @@ erDiagram
     BOOKS ||--o{ BORROWINGS : "is borrowed"
 ```
 
+### Column Details
+
+**Users Table** — Roles: `admin`, `librarian`, `user`
+
+**Books Table** — `available_copies` is auto-managed by the borrowing engine
+
+**Borrowings Table** — Status values: `borrowed`, `returned`, `overdue`
+
 ---
 
-## 🛡 Role & Permission Matrix
+## 🛡 Role and Permission Matrix
 
-| Action | 🛡️ Admin | 📗 Librarian | 🎓 User |
-|--------|:--------:|:------------:|:-------:|
-| **View Dashboard Statistics** | ✅ | ✅ | ❌ (Welcome page) |
-| **Manage Users (CRUD)** | ✅ | ❌ | ❌ |
-| **Manage Categories (CRUD)** | ✅ | ❌ | ❌ |
-| **Manage Books (CRUD)** | ✅ | ✅ | ❌ |
-| **View Books Catalog** | ✅ | ✅ | ✅ |
-| **View Book Details** | ✅ | ✅ | ✅ |
-| **Borrow Books** | ❌ | ❌ | ✅ |
-| **View Borrowing History (All)** | ✅ | ✅ | ❌ |
-| **View Own Borrowing History** | ❌ | ❌ | ✅ |
-| **Mark Books as Returned** | ✅ | ✅ | ❌ |
-| **View System Activity Logs** | ✅ | ❌ | ❌ |
-| **View Notifications** | ✅ | ✅ | ✅ |
+| Action | Admin | Librarian | User |
+|--------|:-----:|:---------:|:----:|
+| View Dashboard Statistics | ✅ | ✅ | ❌ |
+| Manage Users (CRUD) | ✅ | ❌ | ❌ |
+| Manage Categories (CRUD) | ✅ | ❌ | ❌ |
+| Manage Books (CRUD) | ✅ | ✅ | ❌ |
+| View Books Catalog | ✅ | ✅ | ✅ |
+| View Book Details | ✅ | ✅ | ✅ |
+| Borrow Books | ❌ | ❌ | ✅ |
+| View All Borrowing History | ✅ | ✅ | ❌ |
+| View Own Borrowing History | ❌ | ❌ | ✅ |
+| Mark Books as Returned | ✅ | ✅ | ❌ |
+| View System Activity Logs | ✅ | ❌ | ❌ |
+| View Notifications | ✅ | ✅ | ✅ |
 
 ---
 
@@ -195,31 +212,41 @@ erDiagram
 
 ```mermaid
 sequenceDiagram
-    participant U as 👤 User Browser
-    participant R as ⚛️ React App
-    participant A as 🔑 /api/auth/login
-    participant J as 🛡️ JWT Middleware
-    participant API as 📡 Protected API
+    participant U as User Browser
+    participant R as React App
+    participant A as /api/auth/login
+    participant J as JWT Middleware
+    participant API as Protected API
 
     U->>R: Enter credentials
-    R->>A: POST {username, password}
+    R->>A: POST username and password
     A->>A: Verify password hash
     alt Valid Credentials
-        A-->>R: 200 {token, user}
+        A-->>R: 200 token and user
         R->>R: Store token in localStorage
         R-->>U: Redirect to Dashboard
-        U->>R: Click on "Books"
-        R->>API: GET /api/books (Authorization: Bearer <token>)
+        U->>R: Click on Books
+        R->>API: GET /api/books with Bearer token
         API->>J: Validate JWT
         J->>J: Extract role from claims
-        J-->>API: Identity + Role verified
-        API-->>R: 200 [books data]
+        J-->>API: Identity and Role verified
+        API-->>R: 200 books data
         R-->>U: Render Books Grid
     else Invalid Credentials
-        A-->>R: 401 "Invalid credentials"
+        A-->>R: 401 Invalid credentials
         R-->>U: Show error message
     end
 ```
+
+### How It Works
+
+1. User enters username and password on the Login page
+2. React sends a POST request to `/api/auth/login`
+3. Flask verifies the password hash using Werkzeug
+4. On success, Flask creates a JWT token with the user's role embedded as a claim
+5. React stores the token in `localStorage` and attaches it to every API request via Axios interceptor
+6. On each protected request, Flask-JWT-Extended validates the token and extracts the user identity and role
+7. The `@role_required` decorator checks if the user's role is allowed to access the endpoint
 
 ---
 
@@ -227,77 +254,68 @@ sequenceDiagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Available: Book in catalog
-    Available --> Borrowed: Student clicks "Borrow Now"
-
-    state Borrowed {
-        [*] --> Active
-        Active --> Overdue: Past due_date (90 days)
-    }
-
-    Borrowed --> Returned: Admin/Librarian marks return
-    Returned --> Available: available_copies += 1
-
-    state ReturnCheck <<choice>>
-    Returned --> ReturnCheck
-    ReturnCheck --> NoFine: return_date <= due_date
-    ReturnCheck --> FineApplied: return_date > due_date
-
-    state FineApplied {
-        [*] --> BaseFine: "10% of book price"
-        BaseFine --> EscalatedFine: "late > 7 days\n+10 EGP/extra day"
-    }
-
-    FineApplied --> NotificationSent: In-app alert to student
+    [*] --> Available : Book in catalog
+    Available --> Borrowed : Student clicks Borrow Now
+    Borrowed --> Returned : Admin or Librarian marks return
+    Returned --> Available : available_copies incremented
+    Borrowed --> Overdue : Past due_date of 90 days
+    Overdue --> Returned : Admin or Librarian marks return
 ```
 
-### Borrowing Constraints
+### Borrowing Constraints Flowchart
 
 ```mermaid
 flowchart TD
-    A["Student clicks Borrow"] --> B{"Active borrows < 3?"}
-    B -->|No| C["❌ Reject: Limit Reached\n+ Send Notification"]
+    A["Student clicks Borrow"] --> B{"Active borrows less than 3?"}
+    B -->|No| C["Reject: Limit Reached + Send Notification"]
     B -->|Yes| D{"Any overdue books?"}
-    D -->|Yes| E["❌ Reject: Overdue exists"]
-    D -->|No| F{"available_copies > 0?"}
-    F -->|No| G["❌ Reject: Out of Stock"]
-    F -->|Yes| H["✅ Create Borrowing\navailable_copies -= 1\ndue_date = today + 90 days"]
-    H --> I["📝 Log Activity"]
+    D -->|Yes| E["Reject: Overdue exists"]
+    D -->|No| F{"available_copies greater than 0?"}
+    F -->|No| G["Reject: Out of Stock"]
+    F -->|Yes| H["Create Borrowing record"]
+    H --> I["Decrement available_copies"]
+    I --> J["Set due_date = today + 90 days"]
+    J --> K["Log Activity"]
 ```
 
 ---
 
 ## 💰 Fine Calculation Logic
 
-The fine engine uses a **tiered escalation model** based on the book price and days late:
+The fine engine uses a **tiered escalation model** based on the book price and days late.
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                     FINE CALCULATION RULES                      │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  IF return_date <= due_date:                                   │
-│      fine = 0 EGP  ✅ No fine                                  │
-│                                                                │
-│  IF late <= 7 days:                                            │
-│      fine = book_price × 10%                                   │
-│      Example: book costs 100 EGP → fine = 10 EGP              │
-│                                                                │
-│  IF late > 7 days:                                             │
-│      fine = (book_price × 10%) + (extra_days × 10 EGP)        │
-│      Example: 12 days late, book costs 100 EGP                 │
-│      → 10 + (5 × 10) = 60 EGP                                 │
-│                                                                │
-└────────────────────────────────────────────────────────────────┘
-```
+### Rules
 
-| Scenario | Book Price | Days Late | Fine |
-|----------|-----------|-----------|------|
-| On time | 150 EGP | 0 | **0 EGP** |
-| 3 days late | 150 EGP | 3 | **15 EGP** |
-| 7 days late | 200 EGP | 7 | **20 EGP** |
-| 15 days late | 200 EGP | 15 | **20 + (8×10) = 100 EGP** |
-| 30 days late | 100 EGP | 30 | **10 + (23×10) = 240 EGP** |
+- **On time or early:** No fine (0 EGP)
+- **Late 1-7 days:** 10% of book price
+- **Late more than 7 days:** 10% of book price + 10 EGP per additional day beyond 7
+
+### Examples
+
+| Scenario | Book Price | Days Late | Calculation | Fine |
+|----------|-----------|-----------|-------------|------|
+| On time | 150 EGP | 0 | No fine | **0 EGP** |
+| 3 days late | 150 EGP | 3 | 150 x 10% | **15 EGP** |
+| 7 days late | 200 EGP | 7 | 200 x 10% | **20 EGP** |
+| 15 days late | 200 EGP | 15 | 20 + (8 x 10) | **100 EGP** |
+| 30 days late | 100 EGP | 30 | 10 + (23 x 10) | **240 EGP** |
+
+### Code Implementation
+
+```python
+def calculate_fine(book_price, due_date, return_date):
+    if return_date <= due_date:
+        return 0.0
+
+    days_late = (return_date - due_date).days
+    base_fine = float(book_price) * 0.10
+
+    if days_late <= 7:
+        return base_fine
+    else:
+        extra_days = days_late - 7
+        return base_fine + (extra_days * 10.0)
+```
 
 ---
 
@@ -305,63 +323,63 @@ The fine engine uses a **tiered escalation model** based on the book price and d
 
 Base URL: `http://localhost:5000/api`
 
-### 🔑 Authentication
+### Authentication
 
 | Method | Endpoint | Body | Response | Auth |
 |--------|----------|------|----------|------|
-| `POST` | `/auth/login` | `{username, password}` | `{token, user}` | ❌ |
-| `GET` | `/auth/me` | — | `{user}` | ✅ |
+| POST | `/auth/login` | `{username, password}` | `{token, user}` | No |
+| GET | `/auth/me` | — | `{user}` | Yes |
 
-### 📚 Books
+### Books
 
-| Method | Endpoint | Description | Auth | Roles |
-|--------|----------|-------------|------|-------|
-| `GET` | `/books?page=&per_page=&search=&category_id=` | List all books (paginated) | ✅ | All |
-| `GET` | `/books/:id` | Get single book details | ✅ | All |
-| `POST` | `/books` | Create a new book (multipart/form-data) | ✅ | Admin, Librarian |
-| `PUT` | `/books/:id` | Update a book | ✅ | Admin, Librarian |
-| `DELETE` | `/books/:id` | Delete a book | ✅ | Admin, Librarian |
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/books?page=&per_page=&search=&category_id=` | List books (paginated) | All |
+| GET | `/books/:id` | Get single book details | All |
+| POST | `/books` | Create book (multipart/form-data) | Admin, Librarian |
+| PUT | `/books/:id` | Update book | Admin, Librarian |
+| DELETE | `/books/:id` | Delete book | Admin, Librarian |
 
-### 👥 Users
+### Users
 
-| Method | Endpoint | Description | Auth | Roles |
-|--------|----------|-------------|------|-------|
-| `GET` | `/users?per_page=` | List all users | ✅ | Admin |
-| `POST` | `/users` | Create user `{name, username, password, role}` | ✅ | Admin |
-| `PUT` | `/users/:id` | Update user | ✅ | Admin |
-| `DELETE` | `/users/:id` | Delete user | ✅ | Admin |
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/users?per_page=` | List all users | Admin |
+| POST | `/users` | Create user | Admin |
+| PUT | `/users/:id` | Update user | Admin |
+| DELETE | `/users/:id` | Delete user | Admin |
 
-### 🔄 Borrowings
+### Borrowings
 
-| Method | Endpoint | Description | Auth | Roles |
-|--------|----------|-------------|------|-------|
-| `GET` | `/borrowings` | List borrowings (filtered by role) | ✅ | All |
-| `POST` | `/borrowings` | Borrow a book `{book_id}` | ✅ | User |
-| `PUT` | `/borrowings/:id/return` | Mark book as returned | ✅ | Admin, Librarian |
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/borrowings` | List borrowings (role-filtered) | All |
+| POST | `/borrowings` | Borrow a book `{book_id}` | User |
+| PUT | `/borrowings/:id/return` | Mark book returned | Admin, Librarian |
 
-### 🏷️ Categories
+### Categories
 
-| Method | Endpoint | Description | Auth | Roles |
-|--------|----------|-------------|------|-------|
-| `GET` | `/categories` | List all categories | ✅ | All |
-| `POST` | `/categories` | Create category | ✅ | Admin |
-| `PUT` | `/categories/:id` | Update category | ✅ | Admin |
-| `DELETE` | `/categories/:id` | Delete category | ✅ | Admin |
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/categories` | List all categories | All |
+| POST | `/categories` | Create category | Admin |
+| PUT | `/categories/:id` | Update category | Admin |
+| DELETE | `/categories/:id` | Delete category | Admin |
 
-### 🔔 Notifications
+### Notifications
 
-| Method | Endpoint | Description | Auth | Roles |
-|--------|----------|-------------|------|-------|
-| `GET` | `/notifications` | Get user notifications | ✅ | All |
-| `PUT` | `/notifications/:id/read` | Mark one as read | ✅ | All |
-| `PUT` | `/notifications/read-all` | Mark all as read | ✅ | All |
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/notifications` | Get user notifications | All |
+| PUT | `/notifications/:id/read` | Mark one as read | All |
+| PUT | `/notifications/read-all` | Mark all as read | All |
 
-### 📊 Dashboard & Logs
+### Dashboard and Logs
 
-| Method | Endpoint | Description | Auth | Roles |
-|--------|----------|-------------|------|-------|
-| `GET` | `/dashboard` | Get stats, top books, recent logs | ✅ | Admin, Librarian |
-| `GET` | `/activity-logs?page=&per_page=` | Full activity audit trail | ✅ | Admin |
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/dashboard` | Stats, top books, recent logs | Admin, Librarian |
+| GET | `/activity-logs?page=&per_page=` | Full audit trail | Admin |
 
 ---
 
@@ -370,73 +388,73 @@ Base URL: `http://localhost:5000/api`
 ```
 db_Flask/
 │
-├── 📁 backend/                     # Flask REST API
-│   ├── 📁 app/
-│   │   ├── 📁 models/             # SQLAlchemy ORM Models
-│   │   │   ├── user.py            # User model (id, name, username, password, role)
-│   │   │   ├── book.py            # Book model (title, author, price, copies, image)
-│   │   │   ├── category.py        # Category model (name, description)
-│   │   │   ├── borrowing.py       # Borrowing model (dates, status, fine)
-│   │   │   ├── notification.py    # Notification model (title, message, is_read)
-│   │   │   └── activity_log.py    # ActivityLog model (action_type, description)
+├── backend/                        # Flask REST API
+│   ├── app/
+│   │   ├── models/                 # SQLAlchemy ORM Models
+│   │   │   ├── user.py             # User model
+│   │   │   ├── book.py             # Book model
+│   │   │   ├── category.py         # Category model
+│   │   │   ├── borrowing.py        # Borrowing model
+│   │   │   ├── notification.py     # Notification model
+│   │   │   └── activity_log.py     # ActivityLog model
 │   │   │
-│   │   ├── 📁 routes/             # API Blueprint Routes
-│   │   │   ├── auth.py            # POST /login, GET /me
-│   │   │   ├── books.py           # CRUD + image upload + search/pagination
-│   │   │   ├── users.py           # Admin-only user management
-│   │   │   ├── categories.py      # Admin-only category management
-│   │   │   ├── borrowings.py      # Borrow/Return lifecycle
-│   │   │   ├── notifications.py   # Read/mark notifications
-│   │   │   ├── dashboard.py       # Stats & analytics endpoint
-│   │   │   └── activity_logs.py   # Paginated audit trail
+│   │   ├── routes/                 # API Blueprint Routes
+│   │   │   ├── auth.py             # Login and token endpoints
+│   │   │   ├── books.py            # CRUD + image upload + pagination
+│   │   │   ├── users.py            # Admin-only user management
+│   │   │   ├── categories.py       # Admin-only categories
+│   │   │   ├── borrowings.py       # Borrow and Return lifecycle
+│   │   │   ├── notifications.py    # Read and mark notifications
+│   │   │   ├── dashboard.py        # Stats and analytics
+│   │   │   └── activity_logs.py    # Paginated audit trail
 │   │   │
-│   │   ├── 📁 utils/
-│   │   │   ├── decorators.py      # @role_required with JWT claims
-│   │   │   └── helpers.py         # calculate_fine() engine
+│   │   ├── utils/
+│   │   │   ├── decorators.py       # @role_required with JWT claims
+│   │   │   └── helpers.py          # calculate_fine() engine
 │   │   │
-│   │   ├── __init__.py            # App Factory (create_app)
-│   │   ├── config.py              # Config from .env
-│   │   └── extensions.py          # db, jwt instances
+│   │   ├── __init__.py             # App Factory (create_app)
+│   │   ├── config.py               # Config from .env
+│   │   └── extensions.py           # db, jwt instances
 │   │
-│   ├── 📁 uploads/                # Book cover image storage
-│   ├── .env                       # Environment variables
-│   ├── requirements.txt           # Python dependencies
-│   ├── run.py                     # Entry point (python run.py)
-│   └── seed.py                    # Seed admin + default categories
+│   ├── uploads/                    # Book cover image storage
+│   ├── .env                        # Environment variables
+│   ├── requirements.txt            # Python dependencies
+│   ├── run.py                      # Entry point
+│   └── seed.py                     # Seed admin + default categories
 │
-├── 📁 frontend/                   # React SPA (Vite)
-│   ├── 📁 src/
-│   │   ├── 📁 api/
-│   │   │   └── axios.js           # Axios instance + JWT interceptor
+├── frontend/                       # React SPA (Vite)
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── axios.js            # Axios instance + JWT interceptor
 │   │   │
-│   │   ├── 📁 components/
-│   │   │   └── 📁 Layout/
-│   │   │       └── Layout.jsx     # Sidebar + Header + Notification badge
+│   │   ├── components/
+│   │   │   └── Layout/
+│   │   │       └── Layout.jsx      # Sidebar + Header + Bell badge
 │   │   │
-│   │   ├── 📁 context/
-│   │   │   └── AuthContext.jsx    # React Context for auth state
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx     # React Context for auth state
 │   │   │
-│   │   ├── 📁 pages/
-│   │   │   ├── Login.jsx          # Login form
-│   │   │   ├── Dashboard.jsx      # Stats cards + activity timeline
-│   │   │   ├── BooksPage.jsx      # Book grid with search & filters
-│   │   │   ├── BookDetailsPage.jsx# Immersive book detail view
-│   │   │   ├── BookFormPage.jsx   # Add/Edit book form + image upload
-│   │   │   ├── UsersPage.jsx      # User CRUD table (Admin)
-│   │   │   ├── CategoriesPage.jsx # Inline category management (Admin)
-│   │   │   ├── BorrowingsPage.jsx # Kiosk for students / Table for admin
-│   │   │   ├── NotificationsPage.jsx # Notification inbox
-│   │   │   └── ActivityLogsPage.jsx  # System audit log viewer (Admin)
+│   │   ├── pages/
+│   │   │   ├── Login.jsx           # Login form
+│   │   │   ├── Dashboard.jsx       # Stats cards + activity timeline
+│   │   │   ├── BooksPage.jsx       # Book grid with search and filters
+│   │   │   ├── BookDetailsPage.jsx # Immersive book detail view
+│   │   │   ├── BookFormPage.jsx    # Add/Edit book with image upload
+│   │   │   ├── UsersPage.jsx       # User CRUD table (Admin)
+│   │   │   ├── CategoriesPage.jsx  # Inline category management
+│   │   │   ├── BorrowingsPage.jsx  # Kiosk for students / Table for staff
+│   │   │   ├── NotificationsPage.jsx  # Notification inbox
+│   │   │   └── ActivityLogsPage.jsx   # System audit log (Admin)
 │   │   │
-│   │   ├── App.jsx                # Routes + ProtectedRoute wrapper
-│   │   ├── index.css              # Global design system
-│   │   └── main.jsx               # Vite entry point
+│   │   ├── App.jsx                 # Routes + ProtectedRoute wrapper
+│   │   ├── index.css               # Global design system
+│   │   └── main.jsx                # Vite entry point
 │   │
 │   ├── package.json
 │   └── vite.config.js
 │
-├── schema.sql                     # Reference SQL schema
-└── README.md                      # ← You are here
+├── schema.sql                      # Reference SQL schema
+└── README.md                       # This file
 ```
 
 ---
@@ -451,7 +469,7 @@ db_Flask/
 | Flask-SQLAlchemy | 3.1.1 | ORM for database models |
 | Flask-JWT-Extended | 4.7.1 | JWT token authentication |
 | Flask-CORS | 5.0.1 | Cross-origin requests |
-| Werkzeug | 3.1.3 | Password hashing (pbkdf2:sha256) |
+| Werkzeug | 3.1.3 | Password hashing |
 | PyMySQL | 1.1.1 | MySQL driver (production) |
 | python-dotenv | 1.1.0 | Environment variable loader |
 
@@ -460,14 +478,14 @@ db_Flask/
 | Package | Purpose |
 |---------|---------|
 | React 18 | UI component library |
-| Vite 5 | Build tool & dev server |
+| Vite 5 | Build tool and dev server |
 | React Router DOM | Client-side routing |
 | Axios | HTTP client with interceptors |
 | Lucide React | Modern icon system |
 
 ---
 
-## 🚀 Setup & Installation
+## 🚀 Setup and Installation
 
 ### Prerequisites
 
@@ -475,51 +493,52 @@ db_Flask/
 - Node.js 18+
 - npm or yarn
 
-### 1️⃣ Clone & Backend Setup
+### Step 1: Clone and Backend Setup
 
 ```bash
 # Clone the repository
-git clone <repo-url>
-cd db_Flask
+git clone https://github.com/ahmed0913/library.git
+cd library
 
 # Create Python virtual environment
 python -m venv venv
 
-# Activate it
-# Windows:
+# Activate it (Windows)
 .\venv\Scripts\activate
-# Mac/Linux:
+
+# Activate it (Mac/Linux)
 source venv/bin/activate
 
 # Install Python dependencies
 pip install -r backend/requirements.txt
 ```
 
-### 2️⃣ Configure Environment
+### Step 2: Configure Environment
 
-Create `backend/.env` (or edit the existing one):
+Create `backend/.env`:
 
 ```env
 DATABASE_URL=sqlite:///../library.db
 JWT_SECRET_KEY=your-super-secret-key-change-me
 ```
 
-> 💡 To use **MySQL** in production, change `DATABASE_URL` to:
-> ```
-> DATABASE_URL=mysql+pymysql://user:password@localhost:3306/library_db
-> ```
+To use MySQL in production, change DATABASE_URL to:
 
-### 3️⃣ Initialize Database & Start Backend
+```
+DATABASE_URL=mysql+pymysql://user:password@localhost:3306/library_db
+```
+
+### Step 3: Initialize Database and Start Backend
 
 ```bash
 # Seed admin account + default categories
 python backend/seed.py
 
-# Start Flask server (port 5000)
+# Start Flask server on port 5000
 python backend/run.py
 ```
 
-### 4️⃣ Frontend Setup
+### Step 4: Frontend Setup
 
 ```bash
 # In a new terminal
@@ -528,13 +547,13 @@ cd frontend
 # Install Node dependencies
 npm install
 
-# Start Vite dev server (port 3000)
+# Start Vite dev server on port 3000
 npm run dev
 ```
 
-### ✅ You're Live!
+### Step 5: Open the App
 
-Open **http://localhost:3000** in your browser.
+Open your browser and navigate to: **http://localhost:3000**
 
 ---
 
@@ -542,21 +561,21 @@ Open **http://localhost:3000** in your browser.
 
 | Field | Value |
 |-------|-------|
-| **Username** | `admin` |
-| **Password** | `admin123` |
-| **Role** | Admin (full access) |
+| Username | `admin` |
+| Password | `admin123` |
+| Role | Admin (full access) |
 
-> ⚠️ **Change this password immediately** via the Users management panel after your first login.
+> **Warning:** Change this password immediately via the Users management panel after your first login.
 
 ### Default Seeded Categories
 
-| Category |
-|----------|
-| Fiction |
-| Science |
-| Technology |
-| History |
-| Literature |
+| # | Category |
+|---|----------|
+| 1 | Fiction |
+| 2 | Science |
+| 3 | Technology |
+| 4 | History |
+| 5 | Literature |
 
 ---
 
@@ -564,54 +583,30 @@ Open **http://localhost:3000** in your browser.
 
 ```mermaid
 graph LR
-    Login["🔐 Login Page"]
-    Login --> Dashboard
-
-    subgraph "All Users"
-        Dashboard["📊 Dashboard"]
-        Books["📚 Books Grid"]
-        BookDetail["📖 Book Details"]
-        Borrowings["🔄 Borrowings"]
-        Notifications["🔔 Notifications"]
-    end
-
-    subgraph "Admin Only"
-        Users["👥 User Management"]
-        Categories["🏷️ Categories"]
-        Logs["📝 Activity Logs"]
-    end
-
-    subgraph "Admin + Librarian"
-        AddBook["➕ Add Book"]
-        EditBook["✏️ Edit Book"]
-    end
-
-    Dashboard --> Books
-    Books --> BookDetail
-    Books --> AddBook
-    Books --> EditBook
-    Dashboard --> Borrowings
-    Dashboard --> Notifications
-    Dashboard --> Users
-    Dashboard --> Categories
-    Dashboard --> Logs
-
-    style Login fill:#7c3aed,color:#fff
-    style Dashboard fill:#2563eb,color:#fff
+    Login["Login Page"] --> Dashboard["Dashboard"]
+    Dashboard --> Books["Books Grid"]
+    Dashboard --> Borrowings["Borrowings"]
+    Dashboard --> Notifications["Notifications"]
+    Dashboard --> Users["User Management"]
+    Dashboard --> Categories["Categories"]
+    Dashboard --> Logs["Activity Logs"]
+    Books --> BookDetail["Book Details"]
+    Books --> AddBook["Add Book"]
+    Books --> EditBook["Edit Book"]
 ```
 
-| Page | Route | Role | Description |
-|------|-------|------|-------------|
-| Login | `/login` | Public | Credential entry with JWT token exchange |
-| Dashboard | `/` | All | Stats (Admin/Librarian) or Welcome (Student) |
-| Books | `/books` | All | Responsive card grid with search & filter |
-| Book Details | `/books/:id` | All | Full cover image, synopsis, stock status |
+| Page | Route | Access | Description |
+|------|-------|--------|-------------|
+| Login | `/login` | Public | Credential entry with JWT exchange |
+| Dashboard | `/` | All | Stats for Admin or Welcome for Student |
+| Books | `/books` | All | Responsive card grid with search |
+| Book Details | `/books/:id` | All | Cover image, synopsis, stock |
 | Add Book | `/books/add` | Admin, Librarian | Form with image upload |
 | Edit Book | `/books/edit/:id` | Admin, Librarian | Pre-filled edit form |
-| Borrowings | `/borrowings` | All | Card kiosk (Student) or management table (Admin) |
-| Users | `/users` | Admin | Create/edit/delete users and assign roles |
-| Categories | `/categories` | Admin | Inline CRUD for book categories |
-| Notifications | `/notifications` | All | Inbox with read/unread state and bell badge |
+| Borrowings | `/borrowings` | All | Card kiosk or management table |
+| Users | `/users` | Admin | Create, edit, delete users |
+| Categories | `/categories` | Admin | Inline CRUD for categories |
+| Notifications | `/notifications` | All | Inbox with read/unread state |
 | Activity Logs | `/logs` | Admin | Paginated system audit trail |
 
 ---
@@ -619,33 +614,32 @@ graph LR
 ## 📋 Business Rules
 
 ### Borrowing Rules
+
 - Each student can borrow a **maximum of 3 books** simultaneously
 - Students with **overdue books cannot borrow** new ones
 - Borrowing period is **90 days** from the borrow date
 - Only **Admin** and **Librarian** can mark books as returned
 
 ### Fine Rules
+
 - **No fine** if returned on or before the due date
 - **10% of book price** if returned within 7 days after due date
 - After 7 days: **10% of price + 10 EGP per additional day**
 - Fines trigger an **automatic notification** to the student
 
 ### Stock Management
+
 - `available_copies` is decremented when a book is borrowed
 - `available_copies` is incremented when a book is returned
 - A book cannot be borrowed if `available_copies` is 0
-- Deleting a category is **restricted** if it still contains books (`ondelete=RESTRICT`)
+- Deleting a category is restricted if it still contains books
 
 ### Audit Trail
+
 - Every create, update, and delete action on Books, Users, and Categories is logged
 - Borrow and Return operations are logged with full details
-- Logs record the acting user's ID, action type, timestamp, and description
+- Logs record the acting user ID, action type, timestamp, and description
 
 ---
 
-<div align="center">
-
-**Built with ❤️ using Flask & React**
-
-</div>
-]]>
+**Built with ❤ using Flask and React**
