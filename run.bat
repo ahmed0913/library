@@ -13,8 +13,17 @@ cd /d "%~dp0"
 if not exist "venv\Scripts\python.exe" (
     echo [*] First time setup: Creating Python virtual environment...
     python -m venv venv
+    
+    :: Copy .env.example if .env does not exist
+    if not exist "backend\.env" if exist ".env.example" (
+        copy .env.example backend\.env
+    )
+
     echo [*] Installing Backend dependencies...
     venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+    
+    echo [*] Initializing database with dummy data...
+    venv\Scripts\python.exe backend\seed.py
     echo.
 )
 
