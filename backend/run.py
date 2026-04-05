@@ -1,3 +1,7 @@
+# Library Management System
+# Developed by Ahmed Youssef
+# Copyright 2026 Ahmed Youssef. All rights reserved.
+
 from app import create_app
 
 app = create_app()

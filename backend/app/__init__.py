@@ -1,4 +1,8 @@
-"""Flask application factory."""
+"""
+Library Management System - Flask Application Factory
+Developed by Ahmed Youssef
+Copyright 2026 Ahmed Youssef. All rights reserved.
+"""
 
 import os
 from flask import Flask

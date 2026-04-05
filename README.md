@@ -4,13 +4,16 @@
 
 **Flask · React · SQLite/MySQL · JWT Authentication**
 
+**Developed by Ahmed Youssef**
+
 ---
 
 ## 📖 Table of Contents
 
 - [Overview](#-overview)
+- [Screenshots](#-screenshots)
 - [System Architecture](#-system-architecture)
-- [Database Schema](#-database-schema-er-diagram)
+- [Database Schema](#-database-schema)
 - [Role and Permission Matrix](#-role--permission-matrix)
 - [Authentication Flow](#-authentication-flow)
 - [Borrowing Lifecycle](#-borrowing-lifecycle)
@@ -72,120 +75,90 @@ A production-ready Library Management System designed to handle real-world libra
 
 ## 🏗 System Architecture
 
-```mermaid
-graph TB
-    subgraph Frontend["Frontend - React + Vite"]
-        UI["React Components"]
-        Router["React Router DOM"]
-        AuthCtx["AuthContext - JWT State"]
-        Axios["Axios Interceptor"]
-    end
-
-    subgraph Backend["Backend - Flask"]
-        API["Flask REST API"]
-        JWTMw["JWT Middleware"]
-        RoleDec["role_required Decorator"]
-        Routes["Blueprint Routes"]
-    end
-
-    subgraph Database["Database - SQLite or MySQL"]
-        Users["users"]
-        Books["books"]
-        Categories["categories"]
-        Borrowings["borrowings"]
-        Notifications["notifications"]
-        ActivityLogs["activity_logs"]
-    end
-
-    UI --> Router --> AuthCtx
-    AuthCtx --> Axios
-    Axios -->|"HTTP + Bearer Token"| API
-    API --> JWTMw --> RoleDec --> Routes
-    Routes --> Users
-    Routes --> Books
-    Routes --> Categories
-    Routes --> Borrowings
-    Routes --> Notifications
-    Routes --> ActivityLogs
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND (React + Vite)                   │
+│  ┌──────────┐  ┌──────────────┐  ┌───────────────────────┐  │
+│  │  Pages   │  │ React Router │  │ AuthContext (JWT)      │  │
+│  └────┬─────┘  └──────┬───────┘  └───────────┬───────────┘  │
+│       └───────────────┬──────────────────────┘              │
+│                       ▼                                      │
+│              Axios Interceptor                               │
+│           (attaches Bearer token)                            │
+└───────────────────────┬─────────────────────────────────────┘
+                        │ HTTP + JWT Token
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    BACKEND (Flask REST API)                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │ JWT Middleware│─▶│@role_required│─▶│ Blueprint Routes  │  │
+│  └──────────────┘  └──────────────┘  └────────┬──────────┘  │
+│                                                │             │
+│    Routes: auth, books, users, categories,     │             │
+│    borrowings, notifications, dashboard, logs  │             │
+└────────────────────────────────────────────────┬─────────────┘
+                                                 │
+                                                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  DATABASE (SQLite / MySQL)                    │
+│                                                              │
+│   users · books · categories · borrowings                    │
+│   notifications · activity_logs                              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🗃 Database Schema (ER Diagram)
+## 🗃 Database Schema
 
-```mermaid
-erDiagram
-    USERS {
-        int id PK
-        string name
-        string username UK
-        string password
-        string role
-        datetime created_at
-    }
+### Tables and Relationships
 
-    CATEGORIES {
-        int id PK
-        string name UK
-        string description
-        datetime created_at
-    }
-
-    BOOKS {
-        int id PK
-        string title
-        string author
-        text description
-        int category_id FK
-        decimal price
-        string image_path
-        int total_copies
-        int available_copies
-        datetime created_at
-    }
-
-    BORROWINGS {
-        int id PK
-        int user_id FK
-        int book_id FK
-        date borrow_date
-        date due_date
-        date return_date
-        string status
-        decimal fine_amount
-    }
-
-    NOTIFICATIONS {
-        int id PK
-        int user_id FK
-        string title
-        text message
-        boolean is_read
-        datetime created_at
-    }
-
-    ACTIVITY_LOGS {
-        int id PK
-        string action_type
-        int user_id FK
-        datetime timestamp
-        text description
-    }
-
-    USERS ||--o{ BORROWINGS : "borrows"
-    USERS ||--o{ NOTIFICATIONS : "receives"
-    USERS ||--o{ ACTIVITY_LOGS : "performs"
-    CATEGORIES ||--o{ BOOKS : "contains"
-    BOOKS ||--o{ BORROWINGS : "is borrowed"
+```
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│    USERS     │       │  CATEGORIES  │       │    BOOKS     │
+├──────────────┤       ├──────────────┤       ├──────────────┤
+│ id      (PK) │       │ id      (PK) │       │ id      (PK) │
+│ name         │       │ name    (UK) │       │ title        │
+│ username (UK)│       │ description  │       │ author       │
+│ password     │       │ created_at   │       │ description  │
+│ role         │       └──────┬───────┘       │ category_id(FK)
+│ created_at   │              │               │ price        │
+└──────┬───────┘              │ 1:N           │ image_path   │
+       │                      │               │ total_copies │
+       │                      └──────────────▶│ avail_copies │
+       │                                      │ created_at   │
+       │ 1:N                                  └──────┬───────┘
+       │                                             │
+       ▼                                             │ 1:N
+┌──────────────┐                                     │
+│  BORROWINGS  │◀────────────────────────────────────┘
+├──────────────┤
+│ id      (PK) │       ┌──────────────┐
+│ user_id (FK) │       │NOTIFICATIONS │
+│ book_id (FK) │       ├──────────────┤
+│ borrow_date  │       │ id      (PK) │
+│ due_date     │       │ user_id (FK) │
+│ return_date  │       │ title        │
+│ status       │       │ message      │
+│ fine_amount  │       │ is_read      │
+└──────────────┘       │ created_at   │
+                       └──────────────┘
+┌──────────────┐
+│ACTIVITY_LOGS │
+├──────────────┤
+│ id      (PK) │
+│ action_type  │
+│ user_id (FK) │
+│ timestamp    │
+│ description  │
+└──────────────┘
 ```
 
 ### Column Details
 
-**Users Table** — Roles: `admin`, `librarian`, `user`
-
-**Books Table** — `available_copies` is auto-managed by the borrowing engine
-
-**Borrowings Table** — Status values: `borrowed`, `returned`, `overdue`
+- **Users:** Roles are `admin`, `librarian`, or `user`
+- **Books:** `available_copies` is auto-managed by the borrowing engine
+- **Borrowings:** Status values are `borrowed`, `returned`, or `overdue`
 
 ---
 
@@ -210,72 +183,83 @@ erDiagram
 
 ## 🔐 Authentication Flow
 
-```mermaid
-sequenceDiagram
-    participant U as User Browser
-    participant R as React App
-    participant A as /api/auth/login
-    participant J as JWT Middleware
-    participant API as Protected API
-
-    U->>R: Enter credentials
-    R->>A: POST username and password
-    A->>A: Verify password hash
-    alt Valid Credentials
-        A-->>R: 200 token and user
-        R->>R: Store token in localStorage
-        R-->>U: Redirect to Dashboard
-        U->>R: Click on Books
-        R->>API: GET /api/books with Bearer token
-        API->>J: Validate JWT
-        J->>J: Extract role from claims
-        J-->>API: Identity and Role verified
-        API-->>R: 200 books data
-        R-->>U: Render Books Grid
-    else Invalid Credentials
-        A-->>R: 401 Invalid credentials
-        R-->>U: Show error message
-    end
 ```
-
-### How It Works
-
-1. User enters username and password on the Login page
-2. React sends a POST request to `/api/auth/login`
-3. Flask verifies the password hash using Werkzeug
-4. On success, Flask creates a JWT token with the user's role embedded as a claim
-5. React stores the token in `localStorage` and attaches it to every API request via Axios interceptor
-6. On each protected request, Flask-JWT-Extended validates the token and extracts the user identity and role
-7. The `@role_required` decorator checks if the user's role is allowed to access the endpoint
+Step 1: User enters username + password on Login page
+            │
+            ▼
+Step 2: React sends POST /api/auth/login
+            │
+            ▼
+Step 3: Flask verifies password hash (Werkzeug pbkdf2:sha256)
+            │
+            ├── ❌ Invalid → Return 401 "Invalid credentials"
+            │
+            ▼ ✅ Valid
+Step 4: Flask creates JWT token with role claim
+            │
+            ▼
+Step 5: React stores token in localStorage
+            │
+            ▼
+Step 6: Axios interceptor attaches "Authorization: Bearer <token>"
+        to every subsequent API request
+            │
+            ▼
+Step 7: Flask-JWT-Extended validates token on each request
+        @role_required decorator checks if user role is allowed
+            │
+            ▼
+Step 8: API returns data → React renders the UI
+```
 
 ---
 
 ## 🔄 Borrowing Lifecycle
 
-```mermaid
-stateDiagram-v2
-    [*] --> Available : Book in catalog
-    Available --> Borrowed : Student clicks Borrow Now
-    Borrowed --> Returned : Admin or Librarian marks return
-    Returned --> Available : available_copies incremented
-    Borrowed --> Overdue : Past due_date of 90 days
-    Overdue --> Returned : Admin or Librarian marks return
+### State Transitions
+
+```
+                    ┌─────────────┐
+                    │  AVAILABLE  │ (Book in catalog)
+                    └──────┬──────┘
+                           │ Student clicks "Borrow Now"
+                           ▼
+                    ┌─────────────┐
+              ┌─────│  BORROWED   │
+              │     └──────┬──────┘
+              │            │
+   After 90   │            │ Admin/Librarian
+   days       │            │ marks return
+              ▼            ▼
+       ┌─────────────┐  ┌─────────────┐
+       │   OVERDUE   │  │  RETURNED   │──▶ available_copies += 1
+       └──────┬──────┘  └──────┬──────┘
+              │                │
+              │  Admin marks   │ Fine check:
+              │  return        │ On time? → No fine
+              └────────────────│ Late ≤ 7d? → 10% of price
+                               │ Late > 7d? → 10% + 10 EGP/day
+                               ▼
+                        ┌─────────────┐
+                        │ NOTIFICATION│ (if fine > 0)
+                        └─────────────┘
 ```
 
-### Borrowing Constraints Flowchart
+### Borrowing Constraints
 
-```mermaid
-flowchart TD
-    A["Student clicks Borrow"] --> B{"Active borrows less than 3?"}
-    B -->|No| C["Reject: Limit Reached + Send Notification"]
-    B -->|Yes| D{"Any overdue books?"}
-    D -->|Yes| E["Reject: Overdue exists"]
-    D -->|No| F{"available_copies greater than 0?"}
-    F -->|No| G["Reject: Out of Stock"]
-    F -->|Yes| H["Create Borrowing record"]
-    H --> I["Decrement available_copies"]
-    I --> J["Set due_date = today + 90 days"]
-    J --> K["Log Activity"]
+```
+Student clicks "Borrow"
+    │
+    ├── Active borrows >= 3?  ──▶ ❌ REJECT (Limit reached + Notification)
+    │
+    ├── Has overdue books?    ──▶ ❌ REJECT (Must return overdue first)
+    │
+    ├── available_copies = 0? ──▶ ❌ REJECT (Out of stock)
+    │
+    └── All checks pass       ──▶ ✅ CREATE borrowing
+                                     • available_copies -= 1
+                                     • due_date = today + 90 days
+                                     • Log activity
 ```
 
 ---
@@ -426,14 +410,11 @@ db_Flask/
 │   ├── src/
 │   │   ├── api/
 │   │   │   └── axios.js            # Axios instance + JWT interceptor
-│   │   │
 │   │   ├── components/
 │   │   │   └── Layout/
 │   │   │       └── Layout.jsx      # Sidebar + Header + Bell badge
-│   │   │
 │   │   ├── context/
 │   │   │   └── AuthContext.jsx     # React Context for auth state
-│   │   │
 │   │   ├── pages/
 │   │   │   ├── Login.jsx           # Login form
 │   │   │   ├── Dashboard.jsx       # Stats cards + activity timeline
@@ -445,14 +426,13 @@ db_Flask/
 │   │   │   ├── BorrowingsPage.jsx  # Kiosk for students / Table for staff
 │   │   │   ├── NotificationsPage.jsx  # Notification inbox
 │   │   │   └── ActivityLogsPage.jsx   # System audit log (Admin)
-│   │   │
 │   │   ├── App.jsx                 # Routes + ProtectedRoute wrapper
 │   │   ├── index.css               # Global design system
 │   │   └── main.jsx                # Vite entry point
-│   │
 │   ├── package.json
 │   └── vite.config.js
 │
+├── screenshots/                    # UI Screenshots
 ├── schema.sql                      # Reference SQL schema
 └── README.md                       # This file
 ```
@@ -581,20 +561,6 @@ Open your browser and navigate to: **http://localhost:3000**
 
 ## 🖥 Frontend Pages
 
-```mermaid
-graph LR
-    Login["Login Page"] --> Dashboard["Dashboard"]
-    Dashboard --> Books["Books Grid"]
-    Dashboard --> Borrowings["Borrowings"]
-    Dashboard --> Notifications["Notifications"]
-    Dashboard --> Users["User Management"]
-    Dashboard --> Categories["Categories"]
-    Dashboard --> Logs["Activity Logs"]
-    Books --> BookDetail["Book Details"]
-    Books --> AddBook["Add Book"]
-    Books --> EditBook["Edit Book"]
-```
-
 | Page | Route | Access | Description |
 |------|-------|--------|-------------|
 | Login | `/login` | Public | Credential entry with JWT exchange |
@@ -642,4 +608,10 @@ graph LR
 
 ---
 
-**Built with ❤ using Flask and React**
+## 👤 Author
+
+**Ahmed Youssef**
+
+---
+
+*Copyright 2026 Ahmed Youssef. All rights reserved.*
